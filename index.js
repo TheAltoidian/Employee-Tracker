@@ -18,18 +18,48 @@ const viewDepartments = () => {
             console.table(results);
         }
     );
+    showOptions();
 };
 
 const viewRoles = () => {
-
+    connection.query(
+        `SELECT * FROM roles`,
+        function(err, results) {
+            console.table(results);
+        }
+    );
+    showOptions();
 };
 
 const viewEmployees = () => {
-
+    connection.query(
+        `SELECT * FROM employees`,
+        function(err, results) {
+            console.table(results);
+        }
+    );
+    showOptions();
 };
 
 const addDepartment = () => {
-
+    inquierer.prompt({
+        type: 'text',
+        name: 'name',
+        message: 'Enter the name of the department: '
+    })
+    .then(({ name }) => {
+        connection.query(
+        `INSERT INTO departments (name) VALUES (?)`,
+        name,
+        function(err, results) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            console.log('Department of ' + name + ' succesfully added.');
+            showOptions();
+        });
+    });
 };
 
 const addRole = () => {
@@ -46,6 +76,7 @@ const updateRole = () => {
 
 // Present list of options to choose from
 const showOptions = () => {
+    console.log('\n');
     inquierer.prompt([
         {
             type: 'list',
