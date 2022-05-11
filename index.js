@@ -4,6 +4,7 @@ const path = require('path');
 const mysql = require('mysql2');
 const cTable = require('console.table');
 
+// connection to SQL database
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -11,6 +12,27 @@ const connection = mysql.createConnection({
     database: 'employeetracker'
 })
 
+// formulas to help other ones run smoothly
+// take name from list and grab the ID from the relevant table
+const nameToID = (list, name) => {
+    for (i = 0; i < list.length; i++) {
+        if (list[i] === name) {
+            return (i + 1);
+        }
+    }
+    // return (NULL);
+}
+
+// take table from connection.query and turn it into a list
+const tableToList = (table) => {
+    let list = [];
+    for (let i = 0; i < table.length; i++) {
+        list = list.concat(table[i].name);
+    };
+    return (list);
+};
+
+// formulas for the user's selection of how to manage the databse
 const viewDepartments = () => {
     connection.query(
         `SELECT * FROM departments`,
@@ -62,27 +84,19 @@ const addDepartment = () => {
         });
 };
 
-const tableToList = (table) => {
-    let list = [];
-    for (let i = 0; i < table.length; i++) {
-        list = list.concat(table[i].name);
+const addRole = async () => {
+    getDepartmentList = () => {
+        return new Promise((resolve, reject) => {
+            connection.query(
+                `SELECT name FROM departments`,
+                (err, results) => {
+                    return resolve(results);
+                }
+            )
+        })
     };
-    return(list);
-};
 
-const addRole = () => {
-    var nameList = [];
-    connection.query(
-        `SELECT name FROM departments`,
-        function (err, results) {
-            console.log("nameList: " + nameList);
-            console.log("resuls in list: " + tableToList(results));
-            nameList = tableToList(results);
-            console.log("new nameList: " + nameList);
-        }
-    );
-    console.log("final nameList: " + nameList);
-
+    let nameList = tableToList(await getDepartmentList());
 
     inquierer.prompt([
         {
@@ -95,13 +109,30 @@ const addRole = () => {
             name: 'salary',
             message: 'Enter the salary of the role (ex: 50000): '
         },
-        // {
-        //     type: 'list',
-        //     name: 'department',
-        //     message: 'Which department is the role in?',
-        //     choices: 
-        // }
+        {
+            type: 'list',
+            name: 'department',
+            message: 'Which department is the role in?',
+            choices: nameList
+        }
     ])
+        .then(({ title, salary, department }) => {
+            console.log("title: " + title);
+            console.log("salary: " + salary);
+            console.log("department ID: " + nameToID(nameList, department));
+            connection.query(
+                `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)`,
+                [title, salary, nameToID(nameList, department)],
+                function (err, results) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    console.log('Role of ' + title + ' successfully added.');
+                    showOptions();
+                }
+            );
+        });
 };
 
 const addEmployee = () => {
