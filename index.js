@@ -14,7 +14,7 @@ const connection = mysql.createConnection({
 const viewDepartments = () => {
     connection.query(
         `SELECT * FROM departments`,
-        function(err, results) {
+        function (err, results) {
             console.table(results);
         }
     );
@@ -24,7 +24,7 @@ const viewDepartments = () => {
 const viewRoles = () => {
     connection.query(
         `SELECT * FROM roles`,
-        function(err, results) {
+        function (err, results) {
             console.table(results);
         }
     );
@@ -34,7 +34,7 @@ const viewRoles = () => {
 const viewEmployees = () => {
     connection.query(
         `SELECT * FROM employees`,
-        function(err, results) {
+        function (err, results) {
             console.table(results);
         }
     );
@@ -47,23 +47,61 @@ const addDepartment = () => {
         name: 'name',
         message: 'Enter the name of the department: '
     })
-    .then(({ name }) => {
-        connection.query(
-        `INSERT INTO departments (name) VALUES (?)`,
-        name,
-        function(err, results) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            console.log('Department of ' + name + ' succesfully added.');
-            showOptions();
+        .then(({ name }) => {
+            connection.query(
+                `INSERT INTO departments (name) VALUES (?)`,
+                name,
+                function (err, results) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    console.log('Department of ' + name + ' succesfully added.');
+                    showOptions();
+                });
         });
-    });
+};
+
+const tableToList = (table) => {
+    let list = [];
+    for (let i = 0; i < table.length; i++) {
+        list = list.concat(table[i].name);
+    };
+    return(list);
 };
 
 const addRole = () => {
+    var nameList = [];
+    connection.query(
+        `SELECT name FROM departments`,
+        function (err, results) {
+            console.log("nameList: " + nameList);
+            console.log("resuls in list: " + tableToList(results));
+            nameList = tableToList(results);
+            console.log("new nameList: " + nameList);
+        }
+    );
+    console.log("final nameList: " + nameList);
 
+
+    inquierer.prompt([
+        {
+            type: 'text',
+            name: 'title',
+            message: 'Enter the title of the role: '
+        },
+        {
+            type: 'number',
+            name: 'salary',
+            message: 'Enter the salary of the role (ex: 50000): '
+        },
+        // {
+        //     type: 'list',
+        //     name: 'department',
+        //     message: 'Which department is the role in?',
+        //     choices: 
+        // }
+    ])
 };
 
 const addEmployee = () => {
