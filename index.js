@@ -69,10 +69,7 @@ const viewEmployees = async () => {
     getEmployeeList = () => {
         return new Promise((resolve, reject) => {
             connection.query(
-                `SELECT employees.*, roles.title, employees.first_name
-                FROM employees
-                INNER JOIN roles ON roles.id = employees.role_id
-                INNER JOIN employees ON employees.id = employees.manager_id`,
+                    `SELECT * FROM employees`,
                 (err, results) => {
                     if (err) {
                         return resolve(err);
@@ -118,9 +115,7 @@ const addRole = async () => {
             )
         })
     };
-    console.log(await getDepartmentList());
     let nameList = tableToList(await getDepartmentList(), "name");
-    console.log("nameList: " + nameList);
 
     inquierer.prompt([
         {
@@ -141,9 +136,6 @@ const addRole = async () => {
         }
     ])
         .then(({ title, salary, department }) => {
-            console.log("title: " + title);
-            console.log("salary: " + salary);
-            console.log("department ID: " + nameToID(nameList, department));
             connection.query(
                 `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)`,
                 [title, salary, nameToID(nameList, department)],
@@ -210,9 +202,6 @@ const addEmployee = async () => {
         }
     ])
         .then(({ first_name, last_name, role, manager }) => {
-            console.log("name: " + first_name + " " + last_name);
-            console.log("role: " + role);
-            console.log("manager: " + nameToID(employeeList, manager));
             connection.query(
                 `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`,
                 [first_name, last_name, nameToID(roleList, role), nameToID(employeeList, manager)],
@@ -294,7 +283,6 @@ const showOptions = () => {
             choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role']
         }
     ]).then(({ option }) => {
-        // console.log(option);
         switch (option) {
             case 'View all departments':
                 viewDepartments();
