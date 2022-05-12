@@ -32,33 +32,57 @@ const tableToList = (table, key) => {
 };
 
 // formulas for the user's selection of how to manage the databse
-const viewDepartments = () => {
-    connection.query(
-        `SELECT * FROM departments`,
-        function (err, results) {
-            console.table(results);
-        }
-    );
+const viewDepartments = async () => {
+    getDepartmentList = () => {
+        return new Promise((resolve, reject) => {
+            connection.query(
+                `SELECT * FROM departments`,
+                (err, results) => {
+                    return resolve(results);
+                }
+            )
+        })
+    };
+    console.table(await getDepartmentList());
     showOptions();
 };
 
-const viewRoles = () => {
-    connection.query(
-        `SELECT * FROM roles`,
-        function (err, results) {
-            console.table(results);
-        }
-    );
+const viewRoles = async () => {
+    getRoleList = () => {
+        return new Promise((resolve, reject) => {
+            connection.query(
+                `SELECT roles.*, departments.name AS department_name FROM roles LEFT JOIN departments ON roles.department_id = departments.id`,
+                (err, results) => {
+                    if (err) {
+                        return resolve(err);
+                    }
+                    return resolve(results);
+                }
+            )
+        })
+    };
+    console.table(await getRoleList());
     showOptions();
 };
 
-const viewEmployees = () => {
-    connection.query(
-        `SELECT * FROM employees`,
-        function (err, results) {
-            console.table(results);
-        }
-    );
+const viewEmployees = async () => {
+    getEmployeeList = () => {
+        return new Promise((resolve, reject) => {
+            connection.query(
+                `SELECT employees.*, roles.title, employees.first_name
+                FROM employees
+                INNER JOIN roles ON roles.id = employees.role_id
+                INNER JOIN employees ON employees.id = employees.manager_id`,
+                (err, results) => {
+                    if (err) {
+                        return resolve(err);
+                    }
+                    return resolve(results);
+                }
+            )
+        })
+    };
+    console.table(await getEmployeeList());
     showOptions();
 };
 
