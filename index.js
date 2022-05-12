@@ -20,14 +20,13 @@ const nameToID = (list, name) => {
             return (i + 1);
         }
     }
-    // return (NULL);
 }
 
 // take table from connection.query and turn it into a list
-const tableToList = (table) => {
+const tableToList = (table, key) => {
     let list = [];
     for (let i = 0; i < table.length; i++) {
-        list = list.concat(table[i].name);
+        list = list.concat(table[i][key]);
     };
     return (list);
 };
@@ -95,8 +94,9 @@ const addRole = async () => {
             )
         })
     };
-
-    let nameList = tableToList(await getDepartmentList());
+    console.log(await getDepartmentList());
+    let nameList = tableToList(await getDepartmentList(), "name");
+    console.log("nameList: " + nameList);
 
     inquierer.prompt([
         {
@@ -135,12 +135,128 @@ const addRole = async () => {
         });
 };
 
-const addEmployee = () => {
+const addEmployee = async () => {
+    getEmployeeList = () => {
+        return new Promise((resolve, reject) => {
+            connection.query(
+                `SELECT first_name FROM employees`,
+                (err, results) => {
+                    return resolve(results);
+                }
+            )
+        })
+    };
+    let employeeList = tableToList(await getEmployeeList(), "first_name");
 
+    getRoleList = () => {
+        return new Promise((resolve, reject) => {
+            connection.query(
+                `SELECT title FROM roles`,
+                (err, results) => {
+                    return resolve(results);
+                }
+            )
+        })
+    };
+    let roleList = tableToList(await getRoleList(), "title");
+
+
+    inquierer.prompt([
+        {
+            type: 'text',
+            name: 'first_name',
+            message: "Enter the employee's first name: "
+        },
+        {
+            type: 'text',
+            name: 'last_name',
+            message: "Enter the employee's last name: "
+        },
+        {
+            type: 'list',
+            name: 'role',
+            message: "Enter the employee's role: ",
+            choices: roleList
+        },
+        {
+            type: 'list',
+            name: 'manager',
+            message: "Select the employee's manager: ",
+            choices: employeeList
+        }
+    ])
+        .then(({ first_name, last_name, role, manager }) => {
+            console.log("name: " + first_name + " " + last_name);
+            console.log("role: " + role);
+            console.log("manager: " + nameToID(employeeList, manager));
+            connection.query(
+                `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`,
+                [first_name, last_name, nameToID(roleList, role), nameToID(employeeList, manager)],
+                function (err, results) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    console.log('Employee ' + first_name + ' successfully added.');
+                    showOptions();
+                }
+            );
+        });
 };
 
-const updateRole = () => {
+const updateRole = async () => {
+    getEmployeeList = () => {
+        return new Promise((resolve, reject) => {
+            connection.query(
+                `SELECT first_name FROM employees`,
+                (err, results) => {
+                    return resolve(results);
+                }
+            )
+        })
+    };
+    let employeeList = tableToList(await getEmployeeList(), "first_name");
 
+    getRoleList = () => {
+        return new Promise((resolve, reject) => {
+            connection.query(
+                `SELECT title FROM roles`,
+                (err, results) => {
+                    return resolve(results);
+                }
+            )
+        })
+    };
+    let roleList = tableToList(await getRoleList(), "title");
+
+    inquierer.prompt([
+        {
+            type: 'list',
+            name: 'name',
+            message: 'Choose an employee to edit their role: ',
+            choices: employeeList
+        },
+        {
+            type: 'list',
+            name: 'title',
+            message: 'Choose a new role for the employee: ',
+            choices: roleList
+        }
+    ])
+        .then(({ name, title }) => {
+            connection.query(
+                `UPDATE employees SET role_id = ? WHERE first_name = ?`,
+                [nameToID(roleList, title), name],
+                function (err, results) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    console.log('Employee ' + name + ' role successfully changed to ' + title + '.');
+                    showOptions();
+                }
+            );
+        });
 };
 
 // Present list of options to choose from
